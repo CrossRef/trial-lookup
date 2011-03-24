@@ -1,0 +1,54 @@
+/
+
+Display search form, explain api (content negotiation for json)
+and list of supported sources.
+
+/<trial_id>
+
+Forward to trial page, or show "can't find trial" message
+
+/<trial_id> , Accept: text/json
+
+Show json:
+
+{ id: "<id>"
+  url: "<url>" }
+
+or:
+
+{ error: "Can't find trial" }
+
+
+Regexs
+
+ACTRN\d{14}   =>   GET http://www.anzctr.org.au/<id>
+
+ChiCTR\-[A-Z]{3}\-\d{8}   =>   POST http://www.chictr.org/Site/Search.aspx?lang=EN 
+                               scrape for link with href starts with TaskView.aspx?ID=
+
+DRKS\d{8}
+
+(defn url-for-chictr
+  [id]
+  (let [search-result (client/post "http://www.chictr.org/Site/Search.aspx?lang=EN")]
+    (scrape (:body search-result) "link with href starting
+TaskView.aspx?ID=")))
+
+(defn url-for-irct
+  [id]
+  (let [search-result
+  (client/gethttp://www.irct.ir/searchen.php?keyword=" id "&field=a&lang=en")]
+
+
+
+[ { :id-re #"ACTRN\d{14}"
+    :get-url #(str "http://www.anzctr.org.au/" %) }
+  { :id-re #"ChiCTR\-[A-Z]{3}\-\d{8}"
+    :get-url url-for-chictr }
+  { :id-re #"DRKS\d{8}"
+    :get-url #(str "https://drks-neu.uniklinik-freiburg.de/drks_web/navigate.do?navigationId=trial.HTML&TRIAL_ID=" %) }
+  { :id-re #"CTRI/\d{4}/\d{3}/\d{6}"
+    :get-url "" }
+  { :id-re #"PROVCTRI/\d{4}/\d{3}/\d{6}"
+    :get-url "" }
+  { :id-re #""
